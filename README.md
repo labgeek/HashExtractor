@@ -67,7 +67,7 @@ python -m pip install -r requirements.txt
 ## Running the App
 
 ```powershell
-cd C:\data\projects\HashExtractor
+cd C:\HashExtractor
 python hashExtractor.py
 ```
 
