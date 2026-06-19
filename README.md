@@ -2,7 +2,7 @@
 
 Author: labgeek@gmail.com (JD Durick)
 
-`HashExtractor` is a PyQt5 desktop application that scans a folder of files for cryptographic hash values and lets you export the results as CSV or JSON. It detects MD5, SHA1, SHA256, and SHA512 hashes by matching exact hexadecimal lengths using negative lookaround so shorter patterns never match inside longer ones. Every scan is automatically saved to a local SQLite database so you can browse and reload past results at any time.
+`HashExtractor` is a PyQt5 desktop application for extracting cryptographic hashes from a folder of files. It scans recursively across PDF, text, log, CSV, JSON, XML, and Markdown files — detecting MD5, SHA1, SHA256, and SHA512 values using exact hex-length matching with negative lookaround so shorter patterns never collide with longer ones. Results are displayed live as the scan runs, exportable to CSV or JSON, and automatically persisted to a local SQLite database. A built-in Scan History dialog lets you filter past scans by date range and reload any previous result set into the main UI for re-inspection or re-export.
 
 <img width="1708" height="427" alt="image" src="https://github.com/user-attachments/assets/da370fad-035d-4576-96d4-5546f9c58823" />
 
