@@ -12,13 +12,6 @@ from PyQt5.QtCore import *
 from extractor import HashExtractor
 
 
-def resource_path(filename):
-    """Return a file path that works from source and PyInstaller bundles."""
-    if getattr(sys, "frozen", False):
-        return os.path.join(sys._MEIPASS, filename)
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-
-
 class ScanWorker(QObject):
     """Run hash extraction in a worker thread and emit GUI-safe signals."""
 
@@ -49,48 +42,6 @@ class ScanWorker(QObject):
             self.scan_failed.emit(str(error))
 
 
-class ReadmeWindow(QDialog):
-    """Display README.md in a separate read-only dialog."""
-
-    closed = pyqtSignal()
-
-    def __init__(self, readme_path, parent=None):
-        """Create the README viewer for the provided README path."""
-        QDialog.__init__(self, parent)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
-        self.readme_path = readme_path
-
-        layout = QVBoxLayout()
-        self.viewer = QTextEdit()
-        close_button = QPushButton("Close")
-
-        self.viewer.setReadOnly(True)
-        self.viewer.setLineWrapMode(QTextEdit.NoWrap)
-
-        layout.addWidget(self.viewer)
-        layout.addWidget(close_button)
-
-        self.setLayout(layout)
-        self.setGeometry(260, 260, 800, 600)
-        self.setWindowTitle("README.md")
-
-        close_button.clicked.connect(self.close)
-        self.load_readme()
-
-    def load_readme(self):
-        """Load README.md text into the viewer, or show the read error."""
-        try:
-            with open(self.readme_path, "r", encoding="utf-8") as readme:
-                self.viewer.setPlainText(readme.read())
-        except OSError as error:
-            self.viewer.setPlainText("Could not open README.md: %s" % error)
-
-    def closeEvent(self, event):
-        """Emit a close signal so the main window can update its button text."""
-        self.closed.emit()
-        QDialog.closeEvent(self, event)
-
-
 class pdfAnalysis(QDialog):
     """Main Cryptographic Hash Extractor application dialog."""
 
@@ -101,7 +52,6 @@ class pdfAnalysis(QDialog):
 
         self.scan_thread = None
         self.scan_worker = None
-        self.readme_window = None
         self.scan_results = {}
         self._last_hash_types = set()
 
@@ -138,7 +88,6 @@ class pdfAnalysis(QDialog):
 
         self.execute = QPushButton("Start Scan")
         self.clear = QPushButton("Clear Form")
-        self.readme_button = QPushButton("Open README")
         self.browse_pdf = QPushButton("Select Input Folder")
         self.export_csv_btn = QPushButton("Export CSV")
         self.export_json_btn = QPushButton("Export JSON")
@@ -173,7 +122,6 @@ class pdfAnalysis(QDialog):
 
         button_layout.addWidget(self.execute)
         button_layout.addWidget(self.clear)
-        button_layout.addWidget(self.readme_button)
         button_layout.addWidget(self.scan_history_btn)
         button_layout.addStretch()
 
@@ -248,7 +196,6 @@ class pdfAnalysis(QDialog):
 
         self.execute.clicked.connect(self.search)
         self.clear.clicked.connect(self.clear_fields)
-        self.readme_button.clicked.connect(self.toggle_readme)
         self.browse_pdf.clicked.connect(self.browse_pdf_directory)
         self.export_csv_btn.clicked.connect(self.export_csv)
         self.export_json_btn.clicked.connect(self.export_json)
@@ -273,23 +220,6 @@ class pdfAnalysis(QDialog):
             chk.setChecked(True)
         self.reset_scan_output()
         self.status_label.setText("Ready")
-
-    def toggle_readme(self):
-        """Open README.md in a separate window, or close it if already open."""
-        if self.readme_window is not None:
-            self.readme_window.close()
-            return
-
-        readme_path = resource_path("README.md")
-        self.readme_window = ReadmeWindow(readme_path, self)
-        self.readme_window.closed.connect(self.readme_closed)
-        self.readme_window.show()
-        self.readme_button.setText("Close README")
-
-    def readme_closed(self):
-        """Reset README window state after the viewer is closed."""
-        self.readme_window = None
-        self.readme_button.setText("Open README")
 
     def reset_scan_output(self):
         """Reset result table, progress bar, summary counts, and export buttons."""

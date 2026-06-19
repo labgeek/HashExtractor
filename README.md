@@ -48,7 +48,6 @@ Extensions are matched case-insensitively. Files with other extensions are ignor
 - Every completed scan is automatically persisted to a local SQLite database (`hashextractor.db`).
 - Historical scan results can be loaded back into the main UI and exported like a fresh scan.
 - Clear Form button resets all inputs, results, progress, summary fields, and export buttons.
-- README viewer opens this file in a separate read-only window from within the app.
 - Duplicate hashes within the same file are written once.
 - Skipped files (unreadable or malformed) are counted but do not stop the scan.
 
@@ -82,7 +81,6 @@ python hashExtractor.py
 | **Hash Types** checkboxes | Choose which algorithms to scan for (MD5, SHA1, SHA256, SHA512). All checked by default. |
 | **Start Scan** | Validates the input directory and begins the threaded scan. |
 | **Clear Form** | Resets all fields, the results table, the progress bar, and summary counts. |
-| **Open README** | Opens this file in a read-only viewer. Click again to close it. |
 | **Scan History** | Opens the Scan History dialog to browse and reload past scans. |
 | **Export CSV** | Opens a save dialog and writes the current results to a CSV file. Enabled after a successful scan or after loading history. |
 | **Export JSON** | Opens a save dialog and writes the current results to a JSON file. Enabled after a successful scan or after loading history. |
@@ -225,7 +223,7 @@ The GUI in [hashExtractor.py](hashExtractor.py) wires these callbacks to PyQt5 s
 ## Building a Standalone Executable
 
 ```powershell
-python -m PyInstaller --clean --onefile --windowed --name HashExtractor --hidden-import PyQt5.sip --add-data "README.md;." hashExtractor.py
+python -m PyInstaller --clean --onefile --windowed --name HashExtractor --hidden-import PyQt5.sip hashExtractor.py
 ```
 
-`--add-data "README.md;."` bundles this README so the in-app README viewer works from the compiled executable. The database file (`hashextractor.db`) is written next to the compiled executable at runtime.
+The database file (`hashextractor.db`) is written next to the compiled executable at runtime.
