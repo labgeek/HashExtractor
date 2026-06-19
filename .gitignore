@@ -1,7 +1,6 @@
 .claude/
 __pycache__/
 docs/
-tests/
 dist/
 build/
 testpdf.pdf
@@ -12,3 +11,5 @@ howtobuild.md
 HashExtractor.spec
 testFiles/
 out/
+tests/
+*.db

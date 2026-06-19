@@ -4,6 +4,8 @@ import csv
 import json
 import os
 import sys
+from datetime import datetime, timedelta
+from persistence.db import HashDatabase
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -101,6 +103,7 @@ class pdfAnalysis(QDialog):
         self.scan_worker = None
         self.readme_window = None
         self.scan_results = {}
+        self._last_hash_types = set()
 
         main_layout = QVBoxLayout()
         content_layout = QHBoxLayout()
@@ -139,6 +142,7 @@ class pdfAnalysis(QDialog):
         self.browse_pdf = QPushButton("Select Input Folder")
         self.export_csv_btn = QPushButton("Export CSV")
         self.export_json_btn = QPushButton("Export JSON")
+        self.scan_history_btn = QPushButton("Scan History")
 
         self.dir.setPlaceholderText("Select the directory containing files to scan")
         for chk in (self.chk_md5, self.chk_sha1, self.chk_sha256, self.chk_sha512):
@@ -170,6 +174,7 @@ class pdfAnalysis(QDialog):
         button_layout.addWidget(self.execute)
         button_layout.addWidget(self.clear)
         button_layout.addWidget(self.readme_button)
+        button_layout.addWidget(self.scan_history_btn)
         button_layout.addStretch()
 
         export_layout.addWidget(self.export_csv_btn)
@@ -247,6 +252,13 @@ class pdfAnalysis(QDialog):
         self.browse_pdf.clicked.connect(self.browse_pdf_directory)
         self.export_csv_btn.clicked.connect(self.export_csv)
         self.export_json_btn.clicked.connect(self.export_json)
+        self.scan_history_btn.clicked.connect(self.open_scan_history)
+
+        if getattr(sys, 'frozen', False):
+            _db_path = os.path.join(os.path.dirname(sys.executable), "hashextractor.db")
+        else:
+            _db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hashextractor.db")
+        self.db = HashDatabase(_db_path)
 
     def browse_pdf_directory(self):
         """Open a folder picker and populate the input directory field."""
@@ -331,6 +343,7 @@ class pdfAnalysis(QDialog):
         if not hash_types:
             QMessageBox.warning(self, "Selection Error", "Select at least one hash type.")
             return
+        self._last_hash_types = hash_types
 
         extractor = HashExtractor(directory)
         if not extractor.dir_exists():
@@ -368,7 +381,19 @@ class pdfAnalysis(QDialog):
         self.pdfs_scanned.setText(str(scanned_count))
         self.hashes_found.setText(str(hash_count))
         self.skipped_files.setText(str(skipped_count))
-        self.status_label.setText("Scan complete")
+        try:
+            self.db.save_scan(
+                directory=self.dir.text().strip(),
+                scanned_at=datetime.now().isoformat(),
+                hash_types=",".join(sorted(self._last_hash_types)),
+                files_scanned=scanned_count,
+                hashes_found=hash_count,
+                skipped_files=skipped_count,
+                results=results,
+            )
+            self.status_label.setText("Scan complete — saved to database.")
+        except Exception as db_error:
+            self.status_label.setText("Scan complete (database save failed: %s)" % db_error)
         self.set_controls_enabled(True)
         self.export_csv_btn.setEnabled(True)
         self.export_json_btn.setEnabled(True)
@@ -384,6 +409,33 @@ class pdfAnalysis(QDialog):
         """Clear references after the scan thread finishes."""
         self.scan_thread = None
         self.scan_worker = None
+
+    def open_scan_history(self):
+        dialog = ScanHistoryDialog(self.db, self)
+        dialog.results_load_requested.connect(self._load_historical_results)
+        dialog.exec_()
+
+    def _load_historical_results(self, scan, rows):
+        self.reset_scan_output()
+        scan_results = {}
+        for row in rows:
+            path = row['file_path']
+            scan_results[path] = set()
+            for hash_type in ('md5', 'sha1', 'sha256', 'sha512'):
+                if row[hash_type] is not None:
+                    scan_results[path].add((hash_type.upper(), row[hash_type]))
+                    self.add_result(
+                        row['file_path'], row['file_type'],
+                        hash_type.upper(), row[hash_type]
+                    )
+        self.scan_results = scan_results
+        self.pdfs_scanned.setText(str(scan["files_scanned"]))
+        self.skipped_files.setText(str(scan["skipped_files"]))
+        self.export_csv_btn.setEnabled(True)
+        self.export_json_btn.setEnabled(True)
+        self.status_label.setText(
+            "Historical scan from %s loaded." % scan["scanned_at"][:10]
+        )
 
     def export_csv(self):
         """Prompt for a file path and export results as CSV."""
@@ -422,6 +474,117 @@ class pdfAnalysis(QDialog):
             QMessageBox.information(self, "Export Complete", "JSON saved to:\n%s" % path)
         except Exception as error:
             QMessageBox.critical(self, "Export Error", "Could not save JSON: %s" % error)
+
+
+class ScanHistoryDialog(QDialog):
+    results_load_requested = pyqtSignal(dict, list)
+
+    TIME_RANGES = [
+        ("Today",        0),
+        ("Last 7 days",  7),
+        ("Last 30 days", 30),
+        ("Last 90 days", 90),
+        ("All time",     None),
+    ]
+
+    def __init__(self, db, parent=None):
+        QDialog.__init__(self, parent)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.db = db
+        self._scan_rows = []
+
+        self.setWindowTitle("Scan History")
+        self.setGeometry(250, 250, 750, 400)
+
+        layout = QVBoxLayout()
+        filter_layout = QHBoxLayout()
+        button_layout = QHBoxLayout()
+
+        self.time_range_combo = QComboBox()
+        for label, _ in self.TIME_RANGES:
+            self.time_range_combo.addItem(label)
+        self.time_range_combo.setCurrentIndex(2)  # Default: Last 30 days
+
+        self.scans_table = QTableWidget(0, 4)
+        self.scans_table.setHorizontalHeaderLabels(
+            ["Date / Time", "Directory", "Files", "Hashes Found"]
+        )
+        self.scans_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.scans_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.scans_table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.scans_table.setAlternatingRowColors(True)
+        self.scans_table.horizontalHeader().setSectionResizeMode(
+            0, QHeaderView.ResizeToContents
+        )
+        self.scans_table.horizontalHeader().setSectionResizeMode(
+            1, QHeaderView.Stretch
+        )
+        self.scans_table.horizontalHeader().setSectionResizeMode(
+            2, QHeaderView.ResizeToContents
+        )
+        self.scans_table.horizontalHeader().setSectionResizeMode(
+            3, QHeaderView.ResizeToContents
+        )
+
+        self.load_btn = QPushButton("Load Selected")
+        close_btn = QPushButton("Close")
+
+        filter_layout.addWidget(QLabel("Show:"))
+        filter_layout.addWidget(self.time_range_combo)
+        filter_layout.addStretch()
+
+        button_layout.addStretch()
+        button_layout.addWidget(self.load_btn)
+        button_layout.addWidget(close_btn)
+
+        layout.addLayout(filter_layout)
+        layout.addWidget(self.scans_table)
+        layout.addLayout(button_layout)
+        self.setLayout(layout)
+
+        self.time_range_combo.currentIndexChanged.connect(self._refresh)
+        self.load_btn.clicked.connect(self._load_selected)
+        close_btn.clicked.connect(self.close)
+
+        self._refresh()
+
+    def _since_for_index(self, index):
+        _, days = self.TIME_RANGES[index]
+        if days is None:
+            return None
+        if days == 0:
+            return datetime.now().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            ).isoformat()
+        return (datetime.now() - timedelta(days=days)).isoformat()
+
+    def _refresh(self):
+        since = self._since_for_index(self.time_range_combo.currentIndex())
+        self._scan_rows = self.db.get_scans(since=since)
+        self.scans_table.setRowCount(0)
+        for scan in self._scan_rows:
+            row = self.scans_table.rowCount()
+            self.scans_table.insertRow(row)
+            self.scans_table.setItem(
+                row, 0,
+                QTableWidgetItem(scan["scanned_at"].replace("T", " ")[:16])
+            )
+            self.scans_table.setItem(row, 1, QTableWidgetItem(scan["directory"]))
+            self.scans_table.setItem(
+                row, 2, QTableWidgetItem(str(scan["files_scanned"]))
+            )
+            self.scans_table.setItem(
+                row, 3, QTableWidgetItem(str(scan["hashes_found"]))
+            )
+
+    def _load_selected(self):
+        row_index = self.scans_table.currentRow()
+        if row_index < 0:
+            return
+        scan = self._scan_rows[row_index]
+        rows = self.db.get_results(scan["id"])
+        self.results_load_requested.emit(scan, rows)
+        self.close()
 
 
 if __name__ == "__main__":
