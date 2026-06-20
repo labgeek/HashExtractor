@@ -74,13 +74,6 @@ Install dependencies from the project root:
 python -m pip install -r requirements.txt
 ```
 
-To run the test suite or regenerate the sample files under `testFiles/`, install the development tooling as well:
-
-```powershell
-python -m pip install -r requirements-dev.txt
-```
-
-
 ## Running the App
 
 ```powershell
