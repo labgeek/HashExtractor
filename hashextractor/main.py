@@ -79,7 +79,7 @@ class pdfAnalysis(QDialog):
         self.status_label = QLabel("Ready")
         self.title_label = QLabel("Cryptographic Hash Extractor")
         self.subtitle_label = QLabel("Multi-Algorithm File Hash Analysis")
-        self.version_label = QLabel("v0.5")
+        self.version_label = QLabel("v0.5.1")
         self.date_label = QLabel(QDate.currentDate().toString("MMMM d, yyyy"))
         self.pdfs_scanned = QLabel("0")
         self.hashes_found = QLabel("0")
@@ -191,7 +191,7 @@ class pdfAnalysis(QDialog):
 
         self.setLayout(main_layout)
         self.setGeometry(200, 200, 1050, 400)
-        self.setWindowTitle("Cryptographic Hash Extractor v0.5 (labgeek)")
+        self.setWindowTitle("Cryptographic Hash Extractor v0.5.1 (labgeek)")
         self.setFocus()
 
         self.execute.clicked.connect(self.search)
@@ -279,8 +279,7 @@ class pdfAnalysis(QDialog):
             return
         self._last_hash_types = hash_types
 
-        extractor = HashExtractor(directory)
-        if not extractor.dir_exists():
+        if not os.path.isdir(directory):
             QMessageBox.warning(self, "Input Error", "The input directory does not exist.")
             self.status_label.setText("Input directory does not exist")
             return
@@ -343,6 +342,13 @@ class pdfAnalysis(QDialog):
         """Clear references after the scan thread finishes."""
         self.scan_thread = None
         self.scan_worker = None
+
+    def closeEvent(self, event):
+        """Stop any running scan thread before closing."""
+        if self.scan_thread is not None and self.scan_thread.isRunning():
+            self.scan_thread.quit()
+            self.scan_thread.wait()
+        event.accept()
 
     def open_scan_history(self):
         dialog = ScanHistoryDialog(self.db, self)

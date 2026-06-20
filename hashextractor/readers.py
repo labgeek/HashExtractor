@@ -6,9 +6,6 @@ import xml.etree.ElementTree as ET
 import pypdf
 
 
-SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".log", ".md", ".csv", ".json", ".xml"}
-
-
 def read_pdf(path):
     content = ""
     with open(path, "rb") as fh:
@@ -79,6 +76,8 @@ _DISPATCH = {
     ".json": read_json,
     ".xml":  read_xml,
 }
+
+SUPPORTED_EXTENSIONS = set(_DISPATCH.keys())
 
 
 def read_file(path):

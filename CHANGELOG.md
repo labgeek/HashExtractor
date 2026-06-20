@@ -5,6 +5,20 @@ Format: `MM-DD-YYYY HH:MM:SS` timestamps, sections: Added / Changed / Fixed / Re
 
 ---
 
+## [v0.5.1] - 06-20-2026 10:48:37
+
+### Changed
+- Version bumped to v0.5.1 in version label and window title (`main.py`)
+- `SUPPORTED_EXTENSIONS` in `readers.py` is now derived from `_DISPATCH` keys, eliminating the risk of the two sets drifting out of sync
+- Directory existence check in `search()` replaced with `os.path.isdir()` directly, removing a redundant `HashExtractor` instantiation
+
+### Fixed
+- Added `closeEvent` to `pdfAnalysis` that stops and waits for any running scan thread before the dialog closes, preventing a crash on close during an active scan
+- SQLite foreign key enforcement enabled via `PRAGMA foreign_keys = ON` in `HashDatabase._connect()` — the `REFERENCES scans(id)` constraint on `hash_results` was previously decorative only
+- Removed truncated/broken comment block in `db.py` that was left mid-sentence above the `HashDatabase` class definition
+
+---
+
 ## [[v0.5.0] - 06-19-2026 18:21:48]
 
 ### Added
