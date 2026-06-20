@@ -43,7 +43,8 @@ The Office formats (`.docx`, `.xlsx`, `.pptx`) are read directly from their unde
 - Recursive directory search — all supported files under the selected folder are included.
 - Threaded extraction keeps the GUI responsive during long scans.
 - Results table with four columns: **Source File**, **File Type**, **Hash Type**, and **Hash Value**.
-- Alternating row colors and resizable columns for readability.
+- Alternating row colors, and every column is user-resizable by dragging its header border.
+- Long source paths are middle-elided (drive and filename stay visible) and the full path is shown as a tooltip on hover.
 - Progress bar that updates per file processed.
 - Scan summary panel showing files scanned, hashes found, and skipped files.
 - **Export CSV** button saves results to a CSV file of your choosing after the scan completes.

@@ -79,7 +79,7 @@ class pdfAnalysis(QDialog):
         self.status_label = QLabel("Ready")
         self.title_label = QLabel("Cryptographic Hash Extractor")
         self.subtitle_label = QLabel("Multi-Algorithm File Hash Analysis")
-        self.version_label = QLabel("v0.5.1")
+        self.version_label = QLabel("v0.6.0")
         self.date_label = QLabel(QDate.currentDate().toString("MMMM d, yyyy"))
         self.pdfs_scanned = QLabel("0")
         self.hashes_found = QLabel("0")
@@ -198,7 +198,7 @@ class pdfAnalysis(QDialog):
 
         self.setLayout(main_layout)
         self.setGeometry(200, 200, 1050, 400)
-        self.setWindowTitle("Cryptographic Hash Extractor v0.5.1 (labgeek)")
+        self.setWindowTitle("Cryptographic Hash Extractor v0.6.0 (labgeek)")
         self.setFocus()
 
         self.execute.clicked.connect(self.search)

@@ -36,11 +36,7 @@ pip install -r requirements.txt
 python -m hashextractor.main
 ```
 
-Or equivalently:
-
-```bash
-python hashextractor/main.py
-```
+> Run it as a module with `-m` from the project root. Running the file directly (`python hashextractor/main.py`) will fail, because the package uses absolute imports that require the project root on `sys.path`.
 
 ---
 
@@ -73,7 +69,9 @@ Double-click `HashExtractor.exe` — no Python installation required.
 
 Click **Select Input Folder** and choose the directory containing files you want to scan. HashExtractor walks the directory recursively.
 
-**Supported file types:** PDF, TXT, LOG, MD, CSV, JSON, XML
+**Supported file types:** PDF, TXT, LOG, MD, CSV, JSON, XML, DOCX, XLSX, PPTX
+
+> Microsoft Office files (Word `.docx`, Excel `.xlsx`, PowerPoint `.pptx`) are parsed directly from their OpenXML contents — no Office install or extra libraries required. Text split across runs is reassembled, so a hash broken into pieces by the authoring tool is still detected. Word reads the document body, Excel reads string cells across all worksheets, and PowerPoint reads slide text.
 
 ### 2. Choose Hash Types
 
@@ -93,6 +91,8 @@ The results table shows:
 | File Type | Extension of the source file (PDF, TXT, etc.) |
 | Hash Type | Algorithm (MD5, SHA1, SHA256, SHA512) |
 | Hash Value | The extracted hash string |
+
+Every column is resizable — drag a column header's border to widen it. If a source path is too long to fit, it is shortened in the middle (keeping the drive and filename visible); hover over the cell to see the full path in a tooltip.
 
 ### 5. Clear and Re-scan
 
