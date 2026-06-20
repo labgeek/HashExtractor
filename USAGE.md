@@ -1,6 +1,6 @@
-# HashExtractor — Usage Guide
+# HashHarvest — Usage Guide
 
-HashExtractor is a desktop GUI tool for extracting cryptographic hashes (MD5, SHA1, SHA256, SHA512) from files. It is designed for incident response, forensics, and threat intelligence workflows.
+HashHarvest is a desktop GUI tool for extracting cryptographic hashes (MD5, SHA1, SHA256, SHA512) from files. It is designed for incident response, forensics, and threat intelligence workflows.
 
 ---
 
@@ -42,7 +42,7 @@ python -m hashextractor.main
 
 ## Running from the Executable
 
-Download the latest `HashExtractor.exe` from the [Releases](https://github.com/labgeek/HashExtractor/releases) page, or build it yourself:
+Download the latest `HashHarvest.exe` from the [Releases](https://github.com/labgeek/HashExtractor/releases) page, or build it yourself:
 
 ### Build from Source
 
@@ -53,11 +53,11 @@ pip install pyinstaller
 pyinstaller HashExtractor.spec
 ```
 
-The executable is written to `dist\HashExtractor.exe`.
+The executable is written to `dist\HashHarvest.exe`.
 
 ### Launch
 
-Double-click `HashExtractor.exe` — no Python installation required.
+Double-click `HashHarvest.exe` — no Python installation required.
 
 > **Note:** The `hashextractor.db` scan database and the `.env` config file (for VirusTotal) are stored in the same folder as the executable. Keep them together.
 
@@ -67,7 +67,7 @@ Double-click `HashExtractor.exe` — no Python installation required.
 
 ### 1. Select an Input Directory
 
-Click **Select Input Folder** and choose the directory containing files you want to scan. HashExtractor walks the directory recursively.
+Click **Select Input Folder** and choose the directory containing files you want to scan. HashHarvest walks the directory recursively.
 
 **Supported file types:** PDF, TXT, LOG, MD, CSV, JSON, XML, DOCX, XLSX, PPTX
 
@@ -102,11 +102,11 @@ Click **Clear Form** to reset all fields and results before starting a new scan.
 
 ## VirusTotal Integration
 
-HashExtractor supports on-demand VirusTotal lookups for extracted hashes.
+HashHarvest supports on-demand VirusTotal lookups for extracted hashes.
 
 ### Setup
 
-Create a `.env` file in the project root (or the same folder as `HashExtractor.exe`) with your VT API key:
+Create a `.env` file in the project root (or the same folder as `HashHarvest.exe`) with your VT API key:
 
 ```
 VT_API_KEY=your_api_key_here

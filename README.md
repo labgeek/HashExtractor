@@ -1,8 +1,8 @@
-# HashExtractor
+# HashHarvest
 
 Author: labgeek@gmail.com (JD Durick)
 
-`HashExtractor` is a PyQt5 desktop application for extracting cryptographic hashes from a folder of files. It scans recursively across PDF, text, log, CSV, JSON, XML, Markdown, and Microsoft Office files (Word `.docx`, Excel `.xlsx`, PowerPoint `.pptx`) — detecting MD5, SHA1, SHA256, and SHA512 values using exact hex-length matching with negative lookaround so shorter patterns never collide with longer ones. Results are displayed live as the scan runs, exportable to CSV or JSON, and automatically persisted to a local SQLite database. A built-in Scan History dialog lets you filter past scans by date range and reload any previous result set into the main UI for re-inspection or re-export.
+`HashHarvest` is a PyQt5 desktop application for extracting cryptographic hashes from a folder of files. It scans recursively across PDF, text, log, CSV, JSON, XML, Markdown, and Microsoft Office files (Word `.docx`, Excel `.xlsx`, PowerPoint `.pptx`) — detecting MD5, SHA1, SHA256, and SHA512 values using exact hex-length matching with negative lookaround so shorter patterns never collide with longer ones. Results are displayed live as the scan runs, exportable to CSV or JSON, and automatically persisted to a local SQLite database. A built-in Scan History dialog lets you filter past scans by date range and reload any previous result set into the main UI for re-inspection or re-export.
 
 <img width="1660" height="427" alt="image" src="https://github.com/user-attachments/assets/f56c5d14-7dad-42d1-bfb7-95fad9d6c673" />
 
@@ -82,9 +82,11 @@ python -m pip install -r requirements-dev.txt
 ## Running the App
 
 ```powershell
-cd C:\HashExtractor
-python hashExtractor.py
+cd C:\path\to\HashHarvest
+python -m hashextractor.main
 ```
+
+> Run as a module with `-m` from the project root. The Python package is still named `hashextractor` internally, so the import path is unchanged.
 
 ### GUI Controls
 
@@ -232,12 +234,12 @@ rows = db.get_results(scan_id=1)
 | `get_scans(since=None)` | Returns a list of scan records, optionally filtered by ISO-format timestamp. |
 | `get_results(scan_id)` | Returns all per-file hash rows for the given scan id. |
 
-The GUI in [hashExtractor.py](hashExtractor.py) wires these callbacks to PyQt5 signals emitted by a `ScanWorker` running in a `QThread`.
+The GUI in [main.py](hashextractor/main.py) wires these callbacks to PyQt5 signals emitted by a `ScanWorker` running in a `QThread`.
 
 ## Building a Standalone Executable
 
 ```powershell
-python -m PyInstaller --clean --onefile --windowed --name HashExtractor --hidden-import PyQt5.sip hashExtractor.py
+python -m PyInstaller --clean --onefile --windowed --name HashHarvest --hidden-import PyQt5.sip hashextractor/main.py
 ```
 
 The database file (`hashextractor.db`) is written next to the compiled executable at runtime.

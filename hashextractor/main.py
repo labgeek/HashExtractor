@@ -43,12 +43,17 @@ class ScanWorker(QObject):
 
 
 class pdfAnalysis(QDialog):
-    """Main Cryptographic Hash Extractor application dialog."""
+    """Main HashHarvest application dialog."""
 
     def __init__(self):
         """Build the GUI, initialize state, and connect widget signals."""
         QDialog.__init__(self)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(
+            self.windowFlags()
+            & ~Qt.WindowContextHelpButtonHint
+            | Qt.WindowMaximizeButtonHint
+            | Qt.WindowMinimizeButtonHint
+        )
 
         self.scan_thread = None
         self.scan_worker = None
@@ -77,7 +82,7 @@ class pdfAnalysis(QDialog):
         self.chk_sha512 = QCheckBox("SHA512")
         self.progress = QProgressBar()
         self.status_label = QLabel("Ready")
-        self.title_label = QLabel("Cryptographic Hash Extractor")
+        self.title_label = QLabel("HashHarvest")
         self.subtitle_label = QLabel("Multi-Algorithm File Hash Analysis")
         self.version_label = QLabel("v0.6.0")
         self.date_label = QLabel(QDate.currentDate().toString("MMMM d, yyyy"))
@@ -198,7 +203,7 @@ class pdfAnalysis(QDialog):
 
         self.setLayout(main_layout)
         self.setGeometry(200, 200, 1050, 400)
-        self.setWindowTitle("Cryptographic Hash Extractor v0.6.0 (labgeek)")
+        self.setWindowTitle("HashHarvest v0.6.0 (labgeek)")
         self.setFocus()
 
         self.execute.clicked.connect(self.search)
